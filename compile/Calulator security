@@ -1,0 +1,178 @@
+.model small
+.stack
+.data 
+    mensaje_usuario    db 0Dh, 0Ah, 'Ingresa tu usuario: $'
+    mensaje_password   db 0Dh, 0Ah, 'Ingresa tu password: $'
+    acceso_denegado    db 0Dh, 0Ah, 'Usuario o password incorrecto.$'
+    acceso_correcto    db 0Dh, 0Ah, 'Acceso permitido.$'
+    supera_intentos    db 0Dh, 0Ah, 'Se superaron los intentos permitidos.$'
+
+    msg_bienvenida     db 0ah, 0dh, '*** CALCULADORA ***', 0ah, 0dh, '$'
+    msg_opciones       db 'Operadores: + - * /', 0ah, 0dh, '$'
+    msg_pide_op        db 'Ingresa operador: $'
+    msg_num1           db 0ah, 0dh, 'Ingresa el primer numero: $'
+    msg_num2           db 0ah, 0dh, 'Ingresa el segundo numero: $'
+    
+    buffer_usuario     db 20 dup(?), '$'
+    buffer_password    db 20 dup(?), '$'
+
+    user_correcto      db 'admin','$'
+    pass_correcto      db '1234','$'
+
+.code
+    op db ?
+
+; --------- MACROS ---------
+
+imprime macro cadena
+    mov ah, 09h
+    lea dx, cadena
+    int 21h
+endm
+
+pedir_numero macro registro
+    mov ah, 01h
+    int 21h
+    sub al, 30h
+    mov registro, al
+endm
+
+pedir_identificador macro buffer, mensaje
+    local leer_caracter, fin_entrada
+    lea dx, mensaje
+    mov ah, 09h
+    int 21h
+
+    lea si, buffer
+    mov cx, 20
+leer_caracter:
+    mov ah, 01h
+    int 21h
+    cmp al, 13
+    je fin_entrada
+    mov [si], al
+    inc si
+    loop leer_caracter
+
+fin_entrada:
+    mov byte ptr [si], '$'
+endm
+
+
+
+comparar_cadenas proc
+    
+siguiente:
+    mov al, [si]
+    mov bl, [di]
+    cmp al, bl
+    jne diferente
+    cmp al, '$'
+    je iguales
+    inc si
+    inc di
+    jmp siguiente
+
+iguales:
+    mov ax, 1
+    ret
+
+diferente:
+    xor ax, ax
+    ret
+comparar_cadenas endp
+
+
+start:
+    mov ax, @data
+    mov ds, ax
+
+ 
+    mov cx, 3
+login_intento:
+    pedir_identificador buffer_usuario, mensaje_usuario
+    pedir_identificador buffer_password, mensaje_password
+
+    lea si, buffer_usuario
+    lea di, user_correcto
+    call comparar_cadenas
+    cmp ax, 0
+    jne verificar_pass
+    jmp login_error
+
+verificar_pass:
+    lea si, buffer_password
+    lea di, pass_correcto
+    call comparar_cadenas
+    cmp ax, 0
+    jne acceso_ok
+    jmp login_error
+
+login_error:
+    imprime acceso_denegado
+    loop login_intento
+    imprime supera_intentos
+    jmp fin
+
+acceso_ok:
+    imprime acceso_correcto
+    imprime msg_bienvenida
+    imprime msg_opciones
+    imprime msg_pide_op
+
+    mov ah, 01h
+    int 21h
+    mov op, al
+
+    imprime msg_num1
+    pedir_numero bl
+
+    imprime msg_num2
+    pedir_numero bh
+
+    mov al, op
+    cmp al, '+'
+    je suma
+    cmp al, '-'
+    je resta
+    cmp al, '*'
+    je multiplicacion
+    cmp al, '/'
+    je division
+    jmp fin
+
+suma:
+    mov al, bl
+    add al, bh
+    add al, 30h
+    jmp mostrar
+
+resta:
+    mov al, bl
+    sub al, bh
+    add al, 30h
+    jmp mostrar
+
+multiplicacion:
+    mov al, bl
+    mul bh
+    add al, 30h
+    jmp mostrar
+
+division:
+    mov al, bl
+    xor ah, ah
+    div bh
+    add al, 30h
+    jmp mostrar
+
+mostrar:
+    mov dl, al
+    mov ah, 02h
+    int 21h
+
+fin:
+    mov ah, 4Ch
+    int 21h
+
+end start
