@@ -46,6 +46,13 @@ Todos los archivos `.asm` incluyen **comentarios explicativos** para facilitar e
 
 Este repositorio está abierto a mejoras y aportes.  
 Si crees que puedes **agregar ejemplos, optimizar código o hacer el proyecto más educativo**, ¡adelante!  
+
+
+
+> ⚠️ Nota:
+> Los programas y ejemplos incluidos reflejan mi conocimiento actual del lenguaje ensamblador 8086.
+> Este repositorio está pensado con fines educativos y de referencia, y se **aceptan sugerencias y mejoras** para hacerlo más completo y útil.
+
 Se aceptan **pull requests** y sugerencias para que el repositorio crezca y sea más útil para estudiantes y personas interesadas en el lenguaje ensamblador 8086.
 
 ## 👥 Colaborador
